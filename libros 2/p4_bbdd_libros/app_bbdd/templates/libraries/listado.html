@@ -1,0 +1,29 @@
+{% block content %}
+  <h2>{{ titulo }}</h2>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Nombre</th>
+        <th>Dirección</th>
+        <th>Teléfono</th>
+        <th>Email</th>
+        <th>Acciones</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for biblioteca in bibliotecas %}
+        <tr>
+          <td>{{ biblioteca.nombre }}</td>
+          <td>{{ biblioteca.direccion }}</td>
+          <td>{{ biblioteca.telefono }}</td>
+          <td>{{ biblioteca.email }}</td>
+          <td>
+            <a href="{% url 'libro_en_biblioteca' biblioteca.id %}">Detalles</a>
+          </td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+{% endblock %} 
