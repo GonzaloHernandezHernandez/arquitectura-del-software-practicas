@@ -45,31 +45,23 @@ def bibliotecaById(request,id):
 @csrf_exempt
 def libros(request):
     if request.method == 'POST':
-        try:
-            data = json.loads(request.body)
-            biblioteca = Biblioteca.objects.get(id=data.get('biblioteca_id'))
-            Libro.objects.create(
-                biblioteca = biblioteca,
-                titulo = data.get('titulo'),
-                autor = data.get('autor'),
-                editorial = data.get('editorial'),
-                isbn = data.get('isbn'),
-                fecha_publicacion = data.get('fecha_publicacion'),
-                fecha_adquisicion = data.get('fecha_adquisicion'),
-                genero = data.get('genero'),
-                descripcion = data.get('descripcion'),
-            )
-            return JsonResponse({"mensaje": "Libro registrado con éxito" }, status=404)
-        except Libro.DoesNotExist:
-            return JsonResponse({"error": "Libro no encontrado"}, status=404)
-        except KeyError:
-            return JsonResponse({"error": "Datos incompletos"}, status=400)
+        form = LibroForm(request.POST)
+        if form.is_valid():
+            nuevo_libro = form.save() 
+            return redirect('detalles_libro', id=nuevo_libro.id)  
+       
+            
+
+    else:
+        form = LibroForm()
+
+    return render(request, 'books/nuevoLibro.html', {'form': form, 'titulo': 'Agregar Nuevo Libro'})
 
 
 @csrf_exempt
 def librosEnBiblioteca(request,id):     
     if request.method == 'GET':
-        libros = list(Libro.objects.values("titulo").filter(biblioteca_id=id))
+        libros = list(Libro.objects.filter(biblioteca_id=id))
 
         return render(request, 'libraries/librosEnBiblioteca.html', {
         'titulo': 'Listado de libros',
@@ -84,7 +76,7 @@ def detallesOeditarOeliminar_libros(request,id):
     if request.method == 'GET':
         try:
             libro = Libro.objects.values("titulo", "autor", "editorial", "isbn", "fecha_publicacion", "fecha_adquisicion", "genero", "descripcion").get(id=id)
-            return JsonResponse(libro)
+            return render(request, 'books/detallesLibro.html', {'libro': libro})
         except Libro.DoesNotExist:
             return JsonResponse({"error": "Libro no encontrado"}, status=404)
     

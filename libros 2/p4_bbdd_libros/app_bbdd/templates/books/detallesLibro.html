@@ -1,0 +1,16 @@
+{% block content %}
+    <h2>Detalles del Libro</h2>
+    
+    {% if libro %}
+        <p>Título: {{ libro.titulo }}</p>
+        <p>Autor: {{ libro.autor }}</p>
+        <p>Editorial: {{ libro.editorial }}</p>
+        <p>ISBN: {{ libro.isbn }}</p>
+        <p>Fecha de Publicación: {{ libro.fecha_publicacion }}</p>
+        <p>Fecha de Adquisición: {{ libro.fecha_adquisicion }}</p>
+        <p>Género: {{ libro.genero }}</p>
+        <p>Descripción: {{ libro.descripcion }}</p>
+    {% else %}
+        <p>El libro no existe o ha sido eliminado.</p>
+    {% endif %}
+{% endblock %}

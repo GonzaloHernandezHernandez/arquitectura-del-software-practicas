@@ -1,19 +1,17 @@
 {% block content %}
-  <h2>{{ titulo }} </h2>
 
-  <table>
-    <thead>
-      <tr>
-        <th>Titulo</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for libro in libros %}
-        <tr>
-          <td>{{ libro.tirulo }}</td>
-        </tr>
-      {% endfor %}
-    </tbody>
-  </table>
+  <h1>{{ titulo }}</h1>
+
+<ul>
+  <h1>Título </h1>
+    {% for libro in libros %}
+        <li>
+            <a href="{% url 'detalles_libro' id=libro.id %}">
+                {{ libro.titulo }} 
+                
+            </a>
+        </li>
+    {% endfor %}
+</ul>
 
 {% endblock %} 
