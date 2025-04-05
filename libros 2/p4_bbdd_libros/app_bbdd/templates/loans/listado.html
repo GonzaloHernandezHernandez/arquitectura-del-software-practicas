@@ -1,0 +1,36 @@
+<body>
+
+    <h1>Listado de Préstamos</h1>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Usuario</th>
+                <th>Libro</th>
+                <th>Fecha de Préstamo</th>
+                <th>Fecha de Devolución</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% if loans %}
+                {% for loan in loans %}
+                    <tr>
+                        <td>{{ loan.usuario.nombre }} {{ loan.usuario.apellidos }}</td>
+                        <td>{{ loan.libro.titulo }}</td>
+                        <td>{{ loan.fecha_prestamo }}</td>
+                        <td>
+                            {% if loan.fecha_devolucion %}
+                                {{ loan.fecha_devolucion }}
+                            {% else %}
+                                <span class="no-devolucion">No devuelto</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% endfor %}
+            {% else %}
+                <tr>
+                    <td colspan="4">No hay préstamos registrados.</td>
+                </tr>
+            {% endif %}
+        </tbody>
+    </table>

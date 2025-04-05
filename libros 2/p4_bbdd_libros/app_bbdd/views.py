@@ -5,7 +5,7 @@ import json
 from django.http import JsonResponse,HttpResponseRedirect
 from .forms import BibliotecaForm,UsuarioForm,PrestamosForm,LibroForm
 from django.shortcuts import render, redirect
-
+from django.utils import timezone
 
 # Create your views here.
 @csrf_exempt
@@ -168,26 +168,41 @@ def UsuariosDetalles(request,id):
 @csrf_exempt
 def prestamos(request):
     if request.method == 'POST':
-        try:
-            data = json.loads(request.body)
-            usuario = Usuario.objects.get(id=data.get('usuario_id'))
-            libro = Libro.objects.get(id=data.get('libro_id'))
-            Prestamos.objects.create(
-                usuario = usuario,
-                libro = libro,
-                fecha_prestamo = data.get('fecha_prestamo'),
-                fecha_devolucion = data.get('fecha_devolucion')
-            )
-            return JsonResponse({"mensaje": "Prestamo registrado con éxito" }, status=404)
-        except Prestamos.DoesNotExist:
-            return JsonResponse({"error": "Prestamo no encontrado"}, status=404)
-        except KeyError:
-            return JsonResponse({"error": "Datos incompletos"}, status=400)
-    if request.method == 'GET':
-        prestamos = list(Prestamos.objects.values("usuario", "libro", "fecha_prestamo", "fecha_devolucion"))
-        return JsonResponse(prestamos, safe=False)
-    
-    return JsonResponse({"error": "Método no permitido"}, status=405)
+        usuario_id = request.POST.get('usuario_id')
+        libro_id = request.POST.get('libro_id')
+
+        libro = Libro.objects.get(id=libro_id)
+
+        if not libro.disponible:
+            return render(request, 'prestamos/error.html', {
+                'mensaje': 'Este libro no está disponible para préstamo.'
+            })
+
+        Prestamos.objects.create(
+            usuario_id=usuario_id,
+            libro=libro,
+            fecha_prestamo=timezone.now()
+        )
+
+        libro.disponible = False
+        libro.save()
+
+        return redirect('prestamolist')
+
+    # Si GET, mostramos un formulario simple para seleccionar usuario y libro
+    usuarios = Usuario.objects.all()
+    libros_disponibles = Libro.objects.filter(disponible=True)
+    return render(request, 'loans/formulario.html', {
+        'usuarios': usuarios,
+        'libros': libros_disponibles
+    })
+
+def prestamo_listado(request):
+    loan = Prestamos.objects.all()  # Obtener el listado de bibliotecas
+    return render(request, 'loans/listado.html', {
+        'titulo': 'Listado de Usuario',
+        'loans': loan
+    })
 
 @csrf_exempt
 def prestamosDeUsuario(request,id):
@@ -213,3 +228,4 @@ def Modificarprestamos(request,id):
         except KeyError:
             return JsonResponse({"error": "Datos incompletos"}, status=400)
     return JsonResponse({"error": "Método no permitido"}, status=405)
+

@@ -18,6 +18,7 @@ urlpatterns = [
 
     path('users/<int:id>/', views.UsuariosDetalles, name='usuarioDetalles'),
     path('loans/', views.prestamos, name='prestamo'),
+    path('loans/list', views.prestamo_listado, name='prestamolist'),
     path('users/<int:id>/loans/', views.prestamosDeUsuario, name='prestamoUsuario'),
     path('loans/<int:id>/', views.Modificarprestamos, name='prestamoModificado'),
     ]
