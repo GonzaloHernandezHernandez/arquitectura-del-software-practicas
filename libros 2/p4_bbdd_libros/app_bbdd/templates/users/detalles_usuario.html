@@ -1,0 +1,42 @@
+<h1>Detalles del Usuario</h1>
+
+    <!-- Información del Usuario -->
+    <div class="usuario-info">
+        <h2>{{ usuario.nombre }} {{ usuario.apellidos }}</h2>
+        <p><strong>DNI:</strong> {{ usuario.dni }}</p>
+        <p><strong>Email:</strong> {{ usuario.email }}</p>
+        <p><strong>Teléfono:</strong> {{ usuario.telefono }}</p>
+        <p><strong>Dirección:</strong> {{ usuario.direccion }}</p>
+        <p><strong>Fecha de Nacimiento:</strong> {{ usuario.fecha_nacimiento }}</p>
+    </div>
+
+    <!-- Tabla de Prestamos -->
+    <h3>Préstamos del Usuario</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>Título del Libro</th>
+                <th>Autor</th>
+                <th>ISBN</th>
+                <th>Fecha de Préstamo</th>
+                <th>Fecha de Devolución</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% if prestamos %}
+                {% for prestamo in prestamos %}
+                    <tr>
+                        <td>{{ prestamo.libro.titulo }}</td>
+                        <td>{{ prestamo.libro.autor }}</td>
+                        <td>{{ prestamo.libro.isbn }}</td>
+                        <td>{{ prestamo.fecha_prestamo }}</td>
+                        <td>{{ prestamo.fecha_devolucion|default:"No devuelto" }}</td>
+                    </tr>
+                {% endfor %}
+            {% else %}
+                <tr>
+                    <td colspan="5" class="text-center">No hay préstamos registrados.</td>
+                </tr>
+            {% endif %}
+        </tbody>
+    </table>

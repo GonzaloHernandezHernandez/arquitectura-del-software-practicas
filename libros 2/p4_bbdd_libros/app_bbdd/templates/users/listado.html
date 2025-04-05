@@ -1,0 +1,50 @@
+
+    <!DOCTYPE html>
+    <html lang="es">
+        <title>{{ titulo }}</title>
+        </head>
+    <body>
+        <div class="container mt-4">
+            <h1>{{ titulo }}</h1>
+            <!-- Tabla de Usuarios -->
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Nombre</th>
+                        <th>Apellidos</th>
+                        <th>DNI</th>
+                        <th>Email</th>
+                        <th>Teléfono</th>
+                        <th>Dirección</th>
+                        <th>Fecha de Nacimiento</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for usuario in usuario %}
+                        <tr>
+                            <td>{{ usuario.id }}</td>
+                            <td>{{ usuario.nombre }}</td>
+                            <td>{{ usuario.apellidos }}</td>
+                            <td>{{ usuario.dni }}</td>
+                            <td>{{ usuario.email }}</td>
+                            <td>{{ usuario.telefono }}</td>
+                            <td>{{ usuario.direccion }}</td>
+                            <td>{{ usuario.fecha_nacimiento }}</td>
+                            <td>
+                                <a href="{% url 'usuarioDetalles' usuario.id %}">Detalles</a>
+                                </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="9" class="text-center">No hay usuarios registrados.</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    
+    </body>
+    
+</html>

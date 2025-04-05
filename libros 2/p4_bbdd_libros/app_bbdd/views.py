@@ -109,39 +109,61 @@ def detallesOeditarOeliminar_libros(request, id):
     return JsonResponse({"error": "Método no permitido"}, status=405)
 
 @csrf_exempt
-def crearOlistarUsuarios(request):
+def crearUsuarios(request):
     if request.method == 'POST':
-        try:
-            data = json.loads(request.body)
-            Usuario.objects.create(
-                nombre = data.get('nombre'),
-                apellidos = data.get('apellidos'),
-                dni = data.get('dni'),
-                email = data.get('email'),
-                telefono = data.get('telefono'),
-                direccion = data.get('direccion'),
-                fecha_nacimiento = data.get('fecha_nacimiento')
-            )
-            return JsonResponse({"mensaje": "Usuario registrado con éxito" }, status=404)
-        except KeyError:
-            return JsonResponse({"error": "Datos incompletos"}, status=400)
-        
-    if request.method == 'GET':
-            usuarios = list(Usuario.objects.values("nombre", "apellidos"))
+        form = UsuarioForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect('usuarios_listado')  
+        return JsonResponse({"error": "Datos incompletos o inválidos"}, status=400)
 
-            return JsonResponse(usuarios, safe=False)
-    
-    return JsonResponse({"error": "Método no permitido"}, status=405)
+    Usuarios = Usuario.objects.all()  
+
+    form = UsuarioForm()
+    return render(request, 'users/formulario.html', {
+        'form': form, 
+        'titulo': 'Listado de Ususarios',
+        'usuario': Usuarios
+    })
+
+def usuarios_listado(request):
+    usuarios = Usuario.objects.all()  # Obtener el listado de bibliotecas
+    return render(request, 'users/listado.html', {
+        'titulo': 'Listado de Usuario',
+        'usuario': usuarios
+    })
 
 @csrf_exempt
 def UsuariosDetalles(request,id):
-    if request.method == 'GET':
+   if request.method == 'GET':
         try:
-            usuario = Usuario.objects.values("nombre", "apellidos", "dni", "email", "telefono", "direccion", "fecha_nacimiento").get(id=id)
-            return JsonResponse(usuario)
+            # Obtener los detalles del usuario
+            usuario = Usuario.objects.values("id", "nombre", "apellidos", "dni", "email", "telefono", "direccion", "fecha_nacimiento").get(id=id)
+
+            # Obtener los préstamos del usuario
+            prestamos = Prestamos.objects.filter(usuario_id=id).values(
+                "libro__titulo", 
+                "libro__autor", 
+                "libro__isbn", 
+                "fecha_prestamo", 
+                "fecha_devolucion"
+            )
+
+            # Convertir los préstamos a una lista
+            prestamos_list = list(prestamos)
+
+            # Devolver los detalles del usuario junto con sus préstamos
+            response_data = {
+                "usuario": usuario,
+                "prestamos": prestamos_list
+            }
+
+            return render(request, 'users/detalles_usuario.html', {
+            'usuario': usuario,
+            'prestamos': prestamos,
+        })
         except Usuario.DoesNotExist:
-            return JsonResponse({"error": "Usuario no encontrado"}, status=404)
-    return JsonResponse({"error": "Método no permitido"}, status=405)
+            return render(request, 'usuarios/error.html', {'message': 'Usuario no encontrado'})
 
 @csrf_exempt
 def prestamos(request):
