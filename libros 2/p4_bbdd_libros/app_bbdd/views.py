@@ -2,7 +2,7 @@ from django.shortcuts import render
 from django.views.decorators.csrf import csrf_exempt
 from .models import Biblioteca,Libro,Usuario,Prestamos
 import json
-from django.http import JsonResponse
+from django.http import JsonResponse,HttpResponseRedirect
 from .forms import BibliotecaForm,UsuarioForm,PrestamosForm,LibroForm
 from django.shortcuts import render, redirect
 
@@ -49,9 +49,6 @@ def libros(request):
         if form.is_valid():
             nuevo_libro = form.save() 
             return redirect('detalles_libro', id=nuevo_libro.id)  
-       
-            
-
     else:
         form = LibroForm()
 
@@ -72,42 +69,44 @@ def librosEnBiblioteca(request,id):
 
 
 @csrf_exempt
-def detallesOeditarOeliminar_libros(request,id):
-    if request.method == 'GET':
+def detallesOeditarOeliminar_libros(request, id):
+    if request.method == 'GET':  
         try:
-            libro = Libro.objects.values("titulo", "autor", "editorial", "isbn", "fecha_publicacion", "fecha_adquisicion", "genero", "descripcion").get(id=id)
+            libro = Libro.objects.get(id=id)
             return render(request, 'books/detallesLibro.html', {'libro': libro})
         except Libro.DoesNotExist:
             return JsonResponse({"error": "Libro no encontrado"}, status=404)
-    
-    if request.method == 'PUT':
-        try:
-            data = json.loads(request.body)
-            libro = Libro.objects.get(id=id)
-            libro.titulo = data.get('titulo')
-            libro.autor = data.get('autor')
-            libro.editorial = data.get('editorial')
-            libro.isbn = data.get('isbn')
-            libro.fecha_publicacion = data.get('fecha_publicacion')
-            libro.fecha_adquisicion = data.get('fecha_adquisicion')
-            libro.genero = data.get('genero')
-            libro.descripcion = data.get('descripcion')
-            libro.save()
-            return JsonResponse({"mensaje": "Libro modificado con éxito" }, status=404)
-        except Libro.DoesNotExist:
-            return JsonResponse({"error": "Libro no encontrado"}, status=404)
-        except KeyError:
-            return JsonResponse({"error": "Datos incompletos"}, status=400)
-    if request.method == 'DELETE':
-        try:
-            libro = Libro.objects.get(id=id)
-            libro.delete()
-            return JsonResponse({"mensaje": "Libro eliminado con éxito" }, status=404)
-        except Libro.DoesNotExist:
-            return JsonResponse({"error": "Libro no encontrado"}, status=404)
-    
-    return JsonResponse({"error": "Método no permitido"}, status=405)
 
+    elif request.method == 'POST':  # Para manejar PUT o DELETE desde un formulario
+        method = request.POST.get('_method', '').upper()
+
+        if method == 'PUT':  # Editar libro
+            try:
+                libro = Libro.objects.get(id=id)
+                libro.titulo = request.POST.get('titulo', libro.titulo)
+                libro.autor = request.POST.get('autor', libro.autor)
+                libro.editorial = request.POST.get('editorial', libro.editorial)
+                libro.isbn = request.POST.get('isbn', libro.isbn)
+                libro.fecha_publicacion = request.POST.get('fecha_publicacion', libro.fecha_publicacion)
+                libro.fecha_adquisicion = request.POST.get('fecha_adquisicion', libro.fecha_adquisicion)
+                libro.genero = request.POST.get('genero', libro.genero)
+                libro.descripcion = request.POST.get('descripcion', libro.descripcion)
+                libro.disponible = request.POST.get('disponible', libro.disponible)
+                libro.save()
+                return render(request, 'books/editarLibro.html', {'libro': libro, 'mensaje': 'Libro actualizado con éxito'})
+                 
+            except Libro.DoesNotExist:
+                return JsonResponse({"error": "Libro no encontrado"}, status=404)
+
+        elif method == 'DELETE':  # Eliminar libro
+            try:
+                libro = Libro.objects.get(id=id)
+                libro.delete()
+                return redirect('detalles_libro', id=libro.id)
+            except Libro.DoesNotExist:
+                return JsonResponse({"error": "Libro no encontrado"}, status=404)
+
+    return JsonResponse({"error": "Método no permitido"}, status=405)
 
 @csrf_exempt
 def crearOlistarUsuarios(request):

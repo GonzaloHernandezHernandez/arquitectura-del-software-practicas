@@ -19,6 +19,7 @@ class Libro(models.Model):
     fecha_adquisicion = models.DateField()
     genero = models.CharField(max_length=100)
     descripcion = models.TextField()
+    disponible = models.BooleanField(default=True)  # Campo para indicar si el libro está disponible
 
     def __str__(self):
         return self.titulo
