@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Detalles del Préstamo</title>
+    <style>
+        body { font-family: sans-serif; padding: 20px; }
+        label { display: block; margin-top: 10px; }
+    </style>
+</head>
+<body>
+
+    <h1>Detalles del Préstamo</h1>
+
+    <p><strong>Usuario:</strong> {{ prestamo.usuario.nombre }} {{ prestamo.usuario.apellidos }}</p>
+    <p><strong>Libro:</strong> {{ prestamo.libro.titulo }} ({{ prestamo.libro.autor }})</p>
+    <p><strong>Fecha de Préstamo:</strong> {{ prestamo.fecha_prestamo|date:"d-m-Y" }}</p>
+    <p><strong>Fecha de Devolución:</strong> {% if prestamo.fecha_devolucion %}{{ prestamo.fecha_devolucion|date:"d-m-Y" }}{% else %}No devuelto{% endif %}</p>
+
+    <a href="{% url 'prestamoUsuario' id=prestamo.usuario.id %}">Volver a la lista de préstamos</a>
+
+</body>
+</html>

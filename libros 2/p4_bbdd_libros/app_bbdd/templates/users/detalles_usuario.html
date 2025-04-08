@@ -20,6 +20,7 @@
                 <th>ISBN</th>
                 <th>Fecha de Préstamo</th>
                 <th>Fecha de Devolución</th>
+                <th>Accion</th>
             </tr>
         </thead>
         <tbody>
@@ -31,6 +32,11 @@
                         <td>{{ prestamo.libro.isbn }}</td>
                         <td>{{ prestamo.fecha_prestamo }}</td>
                         <td>{{ prestamo.fecha_devolucion|default:"No devuelto" }}</td>
+                        <td>  {% if prestamo.id %}
+                            <a href="{% url 'prestamoModificado' prestamo.id %}">Ver Detalles</a>
+                        {% else %}
+                            <span class="error">ID de préstamo no disponible</span>
+                        {% endif %}</td>
                     </tr>
                 {% endfor %}
             {% else %}

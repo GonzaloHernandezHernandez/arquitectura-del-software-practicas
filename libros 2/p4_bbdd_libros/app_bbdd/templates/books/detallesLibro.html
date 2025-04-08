@@ -17,8 +17,11 @@
                 <button type="submit">Editar</button>
             </form>
             
+            <form method="POST" action="{% url 'detalles_libro' id=libro.id %}">
                 {% csrf_token %}
-                <button type="submit" formaction="{% url 'detalles_libro' id=libro.id %}"  name="_method" value="delete">Eliminar</button>
+                <input type="hidden" name="_method" value="DELETE">
+                <button type="submit">Eliminar</button>
+            </form>
             </form>
 
 

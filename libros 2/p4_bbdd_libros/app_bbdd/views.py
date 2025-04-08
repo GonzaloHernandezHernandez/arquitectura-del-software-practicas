@@ -1,13 +1,11 @@
 from django.shortcuts import render
 from django.views.decorators.csrf import csrf_exempt
 from .models import Biblioteca,Libro,Usuario,Prestamos
-import json
-from django.http import JsonResponse,HttpResponseRedirect
-from .forms import BibliotecaForm,UsuarioForm,PrestamosForm,LibroForm
+from django.http import JsonResponse
+from .forms import BibliotecaForm,UsuarioForm,LibroForm
 from django.shortcuts import render, redirect
 from django.utils import timezone
 
-# Create your views here.
 @csrf_exempt
 def biblioteca(request):
     if request.method == 'POST':
@@ -27,7 +25,7 @@ def biblioteca(request):
     })
 
 def biblioteca_listado(request):
-    bibliotecas = Biblioteca.objects.all()  # Obtener el listado de bibliotecas
+    bibliotecas = Biblioteca.objects.all()  
     return render(request, 'libraries/listado.html', {
         'titulo': 'Listado de bibliotecas',
         'bibliotecas': bibliotecas
@@ -77,19 +75,24 @@ def detallesOeditarOeliminar_libros(request, id):
         except Libro.DoesNotExist:
             return JsonResponse({"error": "Libro no encontrado"}, status=404)
 
-    elif request.method == 'POST':  # Para manejar PUT o DELETE desde un formulario
+    elif request.method == 'POST':  
         method = request.POST.get('_method', '').upper()
 
-        if method == 'PUT':  # Editar libro
+        if method == 'PUT':  
             try:
                 libro = Libro.objects.get(id=id)
                 libro.titulo = request.POST.get('titulo', libro.titulo)
                 libro.autor = request.POST.get('autor', libro.autor)
                 libro.editorial = request.POST.get('editorial', libro.editorial)
                 libro.isbn = request.POST.get('isbn', libro.isbn)
-                libro.fecha_publicacion = request.POST.get('fecha_publicacion', libro.fecha_publicacion)
-                libro.fecha_adquisicion = request.POST.get('fecha_adquisicion', libro.fecha_adquisicion)
-                libro.genero = request.POST.get('genero', libro.genero)
+                fecha_publicacion = request.POST.get('fecha_publicacion')
+                if fecha_publicacion:
+                    libro.fecha_publicacion = fecha_publicacion
+
+                fecha_adquisicion = request.POST.get('fecha_adquisicion')
+                if fecha_adquisicion:
+                    libro.fecha_adquisicion = fecha_adquisicion
+                    libro.genero = request.POST.get('genero', libro.genero)
                 libro.descripcion = request.POST.get('descripcion', libro.descripcion)
                 libro.disponible = request.POST.get('disponible', libro.disponible)
                 libro.save()
@@ -98,11 +101,11 @@ def detallesOeditarOeliminar_libros(request, id):
             except Libro.DoesNotExist:
                 return JsonResponse({"error": "Libro no encontrado"}, status=404)
 
-        elif method == 'DELETE':  # Eliminar libro
+        elif method == 'DELETE': 
             try:
                 libro = Libro.objects.get(id=id)
                 libro.delete()
-                return redirect('detalles_libro', id=libro.id)
+                return redirect('biblioteca_listado')
             except Libro.DoesNotExist:
                 return JsonResponse({"error": "Libro no encontrado"}, status=404)
 
@@ -127,7 +130,7 @@ def crearUsuarios(request):
     })
 
 def usuarios_listado(request):
-    usuarios = Usuario.objects.all()  # Obtener el listado de bibliotecas
+    usuarios = Usuario.objects.all() 
     return render(request, 'users/listado.html', {
         'titulo': 'Listado de Usuario',
         'usuario': usuarios
@@ -137,22 +140,11 @@ def usuarios_listado(request):
 def UsuariosDetalles(request,id):
    if request.method == 'GET':
         try:
-            # Obtener los detalles del usuario
             usuario = Usuario.objects.values("id", "nombre", "apellidos", "dni", "email", "telefono", "direccion", "fecha_nacimiento").get(id=id)
 
-            # Obtener los préstamos del usuario
-            prestamos = Prestamos.objects.filter(usuario_id=id).values(
-                "libro__titulo", 
-                "libro__autor", 
-                "libro__isbn", 
-                "fecha_prestamo", 
-                "fecha_devolucion"
-            )
+            prestamos = Prestamos.objects.filter(usuario_id=id).all()
 
-            # Convertir los préstamos a una lista
             prestamos_list = list(prestamos)
-
-            # Devolver los detalles del usuario junto con sus préstamos
             response_data = {
                 "usuario": usuario,
                 "prestamos": prestamos_list
@@ -189,7 +181,6 @@ def prestamos(request):
 
         return redirect('prestamolist')
 
-    # Si GET, mostramos un formulario simple para seleccionar usuario y libro
     usuarios = Usuario.objects.all()
     libros_disponibles = Libro.objects.filter(disponible=True)
     return render(request, 'loans/formulario.html', {
@@ -198,34 +189,54 @@ def prestamos(request):
     })
 
 def prestamo_listado(request):
-    loan = Prestamos.objects.all()  # Obtener el listado de bibliotecas
+    loan = Prestamos.objects.all()  
     return render(request, 'loans/listado.html', {
         'titulo': 'Listado de Usuario',
         'loans': loan
     })
 
 @csrf_exempt
-def prestamosDeUsuario(request,id):
+def prestamosDeUsuario(request, id):
     if request.method == 'GET':
-        prestamos = list(Prestamos.objects.values("usuario", "libro", "fecha_prestamo", "fecha_devolucion").filter(usuario_id=id))
+        prestamos = list(Prestamos.objects.filter(usuario_id=id).values(
+            "id", "libro__titulo", "fecha_prestamo", "fecha_devolucion"
+        ))
         return JsonResponse(prestamos, safe=False)
-    
+
     return JsonResponse({"error": "Método no permitido"}, status=405)
 
 
 @csrf_exempt
-def Modificarprestamos(request,id):
-    if request.method == 'PUT':
-        try:
-            data = json.loads(request.body)
-            prestamo = Prestamos.objects.get(id=id)
-            prestamo.fecha_prestamo = data.get('fecha_prestamo')
-            prestamo.fecha_devolucion = data.get('fecha_devolucion')
-            prestamo.save()
-            return JsonResponse({"mensaje": "Prestamo modificado con éxito" }, status=404)
-        except Prestamos.DoesNotExist:
-            return JsonResponse({"error": "Prestamo no encontrado"}, status=404)
-        except KeyError:
-            return JsonResponse({"error": "Datos incompletos"}, status=400)
-    return JsonResponse({"error": "Método no permitido"}, status=405)
+def Modificarprestamos(request, id):
+    try:
+        prestamo = Prestamos.objects.get(id=id)
+    except Prestamos.DoesNotExist:
+        return JsonResponse({"error": "Préstamo no encontrado"}, status=404)
 
+    if request.method == 'GET':
+        return render(request, 'loans/editar.html', {'prestamo': prestamo})
+
+    elif request.method == 'POST':
+        fecha_prestamo = request.POST.get('fecha_prestamo')
+        fecha_devolucion = request.POST.get('fecha_devolucion')
+
+        if not fecha_prestamo or not fecha_devolucion:
+            return render(request, 'loans/editar.html', {
+                'prestamo': prestamo,
+                'error': 'Todos los campos son obligatorios.'
+            })
+
+        prestamo.fecha_prestamo = fecha_prestamo
+        prestamo.fecha_devolucion = fecha_devolucion
+        prestamo.save()
+
+        libro = prestamo.libro
+        libro.disponible = True
+        libro.save()
+
+        return render(request, 'loans/editar.html', {
+            'prestamo': prestamo,
+            'mensaje': 'Préstamo modificado con éxito. El libro ha sido devuelto y está disponible.'
+        })
+
+    return JsonResponse({"error": "Método no permitido"}, status=405)
